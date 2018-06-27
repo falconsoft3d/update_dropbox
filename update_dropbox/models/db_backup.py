@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-import xmlrpclib
+
+import xmlrpc.client
 import socket
 import requests
-import os
+import os, sys
 import shutil
 import functools
 import time
@@ -27,13 +28,15 @@ def execute(connector, method, *args):
     res = False
     try:
         res = getattr(connector,method)(*args)
-    except socket.error,e:
+    except socket.error as e:
             raise e
     return res
 
 class UpdateDropboxDbBackup(models.Model):
     _inherit = 'db.backup'
-
+    
+    folder = fields.Char('Backup Directory', help='Absolute path for storing the backups', required='True',
+                         default='/tmp/odoo')
     dropbox_upload = fields.Boolean('Upload backup in Dropbox', help="If you check this option you can specify the details needed to upload backups into a Dropbox User Account.")
     recurrency = fields.Selection([('daily', 'Daily'),('weekly', 'Weekly'), ('monthly', 'Monthly')], 'Recurrency', default='weekly',help="Defines the recurrency of backups to be upload in Dropbox")
     send_mail = fields.Boolean('Send Confirmation Mail',help="Send upload confirmation mail")
@@ -43,21 +46,25 @@ class UpdateDropboxDbBackup(models.Model):
     def schedule_backup(self):
         """Overwrite function for dropbox uploading addition"""
         conf_ids = self.search([])
-
         for rec in conf_ids:
             db_list = self.get_db_list(rec.host, rec.port)
 
             if rec.name in db_list:
                 try:
                     if not os.path.isdir(rec.folder):
-                        os.makedirs(rec.folder)
+                        #os.makedirs(rec.folder, exist_ok=True)
+                        #os.mkdir(rec.folder)
+                        #os.chmod(rec.folder, 0o777)
+                        os.mkdir( rec.folder, 0o755 )
+                        #os.makedirs(rec.folder, 777)
                 except:
                     raise
                 #Create name for dumpfile.
                 bkp_file='%s_%s.%s' % (time.strftime('%d_%m_%Y_%H_%M_%S'),rec.name, rec.backup_type)
                 file_path = os.path.join(rec.folder,bkp_file)
                 uri = 'http://' + rec.host + ':' + rec.port
-                conn = xmlrpclib.ServerProxy(uri + '/xmlrpc/db')
+                
+                conn = xmlrpc.client.ServerProxy(uri + '/xmlrpc/db')
                 bkp=''
                 try:
                     bkp_resp = requests.post(
@@ -72,6 +79,7 @@ class UpdateDropboxDbBackup(models.Model):
                 except:
                     _logger.error(_("Couldn't backup database %s. Bad database administrator password for server running at http://%s:%s" %(rec.name, rec.host, rec.port)))
                     continue
+                #with os.#open(file_path,'w+') as fp:
                 with open(file_path,'wb') as fp:
                     # see https://github.com/kennethreitz/requests/issues/2155
                     bkp_resp.raw.read = functools.partial(
@@ -121,7 +129,7 @@ class UpdateDropboxDbBackup(models.Model):
                         except:
                             _logger.error(_('Exception! We couldn\'t upload the file %s to the Dropbox user account'%file_path))
                             continue
-                except Exception, e:
+                except Exception as e:
                     _logger.error(_('Exception! Something is wrong with the Dropbox API connection'))
                 
             # Check if user wants to write to SFTP or not.
@@ -191,7 +199,7 @@ class UpdateDropboxDbBackup(models.Model):
                                     srv.unlink(file)
                     # Close the SFTP session.
                     srv.close()
-                except Exception, e:
+                except Exception as e:
                     _logger.error(_('Exception! We couldn\'t back up to the FTP server..'))
                     #At this point the SFTP backup failed. We will now check if the user wants
                     #an e-mail notification about this.

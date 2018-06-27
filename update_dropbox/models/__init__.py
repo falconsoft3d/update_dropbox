@@ -1,3 +1,3 @@
-# -*- coding: utf-8 -*-
-import dropbox_config
-import db_backup
+
+from . import dropbox_config
+from . import db_backup

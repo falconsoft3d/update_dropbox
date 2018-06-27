@@ -29,7 +29,9 @@
     'license': 'AGPL-3',
     'category': 'Settings',
     'summary': 'Dropbox Backup Manteiner',
-    'depends': ['auto_backup'],
+    'depends': [
+        'auto_backup'
+    ],
     'description': """
 Dropbox Backup Manteiner MFH
 =====================================================
@@ -47,11 +49,10 @@ Dropbox Backup Manteiner MFH
         'views/db_backup_view.xml',
     ],
     'external_dependencies': {
-        'python': ['requests','dropbox','pysftp','urllib3'],
-     },
+        'python': ['requests', 'dropbox', 'pysftp', 'urllib3'],
+    },
     'installable': True,
     'auto_install': False,
     'demo': [],
     'test': [],
 }
-
