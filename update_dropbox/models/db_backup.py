@@ -52,9 +52,6 @@ class UpdateDropboxDbBackup(models.Model):
             if rec.name in db_list:
                 try:
                     if not os.path.isdir(rec.folder):
-                        #os.makedirs(rec.folder, exist_ok=True)
-                        #os.mkdir(rec.folder)
-                        #os.chmod(rec.folder, 0o777)
                         os.mkdir( rec.folder, 0o755 )
                         #os.makedirs(rec.folder, 777)
                 except:
