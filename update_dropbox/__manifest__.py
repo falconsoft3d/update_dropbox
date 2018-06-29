@@ -23,7 +23,7 @@
 {
     'name': 'Dropbox Backup Manteiner MFH',
     'version': '10.0.0.1.0',
-    'author': "Falcón Solutions",
+    'author': 'Falcon Solutions SpA',
     'maintainer': 'Falcon Solutions',
     'website': 'http://www.falconsolutions.cl',
     'license': 'AGPL-3',
